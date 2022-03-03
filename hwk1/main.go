@@ -8,14 +8,14 @@ func main() {
     nameAsString()
 	lastNameAsString()
 	ageAsInt()
-	//ageDivide3Int()
-	//ageDivide3Remainder()
-	//ageDivide3Float()
+	ageDivide3Int()
+	ageDivide3Remainder()
+	ageDivide3Float()
 	address()
 	phone()
-	//displayPersonalStats(nameAsString(), lastNameAsString(), ageAsInt())
-	printStats(ageAsInt(), nameAsString(), lastNameAsString(), phone())
-	envelopeCover(nameAsString(), lastNameAsString())
+	displayPersonalStats(nameAsString(), lastNameAsString(), ageAsInt())
+	printStats(ageAsInt(), nameAsString(), lastNameAsString(), phone(),address())
+	envelopeCover(nameAsString(), lastNameAsString(),address())
     return
 }
 
@@ -47,13 +47,14 @@ func ageDivide3Float() {
 	fmt.Printf("Age/3 in decimal form: %v \n", float64(x)/float64(y))
 }
 
-func address() (string,string,string,string,string){
-	w :="217 barrington oaks ridge"
-	x :="unit 217"
-	y :="roswell"
-	z :="georgia"
-	a :="30075"
-	return w, x, y, z, a
+func address() [5]string{
+	var address [5]string
+		address[0]="217 barrington oaks ridge"
+		address[1]="unit 217"
+		address[2]="roswell"
+		address[3]="georgia"
+		address[4]="30075"
+	return address
 }
 
 func phone() string{
@@ -67,26 +68,24 @@ func displayPersonalStats(firstname string, lastname string, age int) {
 	fmt.Printf("Age: %v\n", age)
 
 }
-func printStats(age int, firstname string, lastname string, phone string){
-	w,x,y,z,a :=address()
+func printStats(age int, firstname string, lastname string, phone string,address [5]string){
 	firstname=strings.Title(firstname)
 	lastname=strings.Title(lastname)
-	w=strings.Title(w)
-	a=strings.Title(a)
-	x=strings.Title(x)
-	y=strings.Title(y)
-	z=strings.Title(z)
+	w:=strings.Title(address[0])
+	a:=strings.Title(address[1])
+	x:=strings.Title(address[2])
+	y:=strings.Title(address[3])
+	z:=strings.Title(address[4])
 	fmt.Printf("Name:%v %v \nAge:%v \nAddress:%v %v\n%v, %v, %v \nPhone:%v \n",firstname, lastname, age, w, x, y, z, a, phone)
-
 }
-func envelopeCover(firstname string, lastname string){
-	w,x,y,z,a :=address()
+
+func envelopeCover(firstname,lastname string,address [5]string){
 	firstname=strings.Title(firstname)
 	lastname=strings.Title(lastname)
-	w=strings.Title(w)
-	a=strings.Title(a)
-	x=strings.Title(x)
-	y=strings.Title(y)
-	z=strings.Title(z)
+	w:=strings.Title(address[0])
+	a:=strings.Title(address[1])
+	x:=strings.Title(address[2])
+	y:=strings.Title(address[3])
+	z:=strings.Title(address[4])
 	fmt.Printf("%v %v\n%v\n%v\n%v,%v,%v \n",firstname, lastname, w, x, y, z, a)
 }
