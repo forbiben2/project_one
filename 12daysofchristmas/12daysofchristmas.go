@@ -5,8 +5,8 @@ import (
 )
 
 func main() {
-
-	for day := 0; day < 13; day++ {
+	day := 0
+	for {
 		if day == 0 {
 			fmt.Printf("The 12 Days of Christmas\n\n")
 			day = day + 1
@@ -57,10 +57,10 @@ func main() {
 			fallthrough
 		case 1:
 			fmt.Println("A partridge in a pear tree \n \n ")
-			if day == 12 {
-				break
-			}
 		}
-
+day++
+if day > 12{
+break
+}
 	}
 }
