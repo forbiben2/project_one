@@ -62,6 +62,5 @@ day++
 if day > 12{
 break
 }
-//test
 	}
 }
