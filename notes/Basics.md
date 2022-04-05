@@ -22,6 +22,28 @@ Go Programming
     -Built-in concurrency
     -compiles to stand alone binaries-no reaching out to libraries, and version management at run time all dependencies are there
 -Use golang.org and its play button to test things from other pages
+-$GOPATH-environment variable lists places for go to look for a go workspace
+    -three directories
+        -bin-where binaries are placed that go install compiles (executable)
+        -pkg-precompiled object fiels for reuse to speed up a process (from other people)
+        -src-directories holding all .go files (personal source code)
+-Go code is organized in packages
+    -package-all files ina directory on a disk
+-Go modules
+    -aim to replace Go workspaces and $GOPATH
+    -added to make it easier for Go devs to manage various versions of dependencies and add flexability in organizing projects
+    -helps to solve some problems with $GOPATH
+        -puts project code in a specific directory
+    -specifies dependencies for each module
+    -Modules
+        -Usually one project or library
+        -collection of packages all released together
+        -go.mod file at root stored in a $GOPATH/pkg
+        -modules add 2 new files
+            -go.mod-modules name/dependencies/minimal versions
+            -go.sum-auto generated dependencies lock file
+        -A good module holds only necessary info for its program without excess
+
 Git
 -VCS(Version control system)
     -most store info as a list of file based changes
@@ -109,6 +131,8 @@ Git
                 -red hat-yum
                     yellow hat updater modified
             -use ex. sudo apt install [file or directory]
+Other
+    -Anything that runs is considered an executable
             
         
             
