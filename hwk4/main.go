@@ -6,28 +6,42 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 )
 
 type Person struct {
-	Firstname   string  `json:"firstname"`
-	Lastname    string  `json:"lastname"`
-	Phone       int     `json:"phone"`
-	Email       string  `json:"email"`
-	ssn         string  `json:"ssn"` //show as empty lowercase field(private field not shared), or - in json tag
-	MailAddress Address `json:"mailingAddress"`
-	BillAddress Address `json:"billingAddress"`
+	Firstname   string  `json:"firstname" validate:"required,lt=12,alpha"`
+	Lastname    string  `json:"lastname" validate:"required,lt=12,alpha"`
+	Phone       int     `json:"phone" validate:"required,lt=9999999999"`
+	Email       string  `json:"email" validate:"required,email,lt=35"`
+	ssn         string  `json:"ssn" validate:"required,ssn"` //show as empty lowercase field(private field not shared), or - in json tag
+	MailAddress Address `json:"mailingAddress" validate:"required"`
+	BillAddress Address `json:"billingAddress" validate:"required"`
 }
 
 type Address struct {
-	Address1 string `json:"address1"`
-	Address2 string `json:"address2,omitempty"` //will omit if empty
-	City     string `json:"city"`
-	State    string `json:"state"`
-	Zip      int    `json:"zip"`
+	Address1 string `json:"address1" validate:"required,lt=30"`
+	Address2 string `json:"address2,omitempty" validate:"lt=30"` //will omit if empty
+	City     string `json:"city" validate:"required,lt=15,alpha"`
+	State    string `json:"state" validate:"required,len=2,alpha"`
+	Zip      string `json:"zip" validate:"required,numeric,lt=99999"`
 }
 
+type APIErrors struct {
+	Errors []APIError
+}
+type APIError struct {
+	Field string
+	Tag   string
+	Value interface{}
+}
+
+var validate *validator.Validate
+
 func main() {
+
+	validate = validator.New()
 
 	r := mux.NewRouter()
 	r.HandleFunc("/healthcheck", HealthCheckHandler)
@@ -53,13 +67,13 @@ func returnPerson(w http.ResponseWriter, r *http.Request) {
 			Address1: "804 Harbor Pointe Parkway",
 			City:     "Roswell",
 			State:    "GA",
-			Zip:      30350,
+			Zip:      "30350",
 		},
 		BillAddress: Address{
 			Address1: "804 Harbor Pointe Parkway",
 			City:     "Roswell",
 			State:    "GA",
-			Zip:      30350,
+			Zip:      "30350",
 		},
 	}
 
@@ -84,34 +98,36 @@ func createPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// json.Unmarshal(d, &p)
-	if p.Firstname == "" {
-		w.Write([]byte("One or more fields missing(firstname)"))
-	} else if p.Lastname == "" {
-		w.Write([]byte("One or more fields missing(lastname)"))
-	} else if p.Phone == 0 {
-		w.Write([]byte("One or more fields missing(phone)"))
-	} else if p.Email == "" {
-		w.Write([]byte("One or more fields missing(email)"))
-	} else if p.MailAddress.Address1 == "" {
-		w.Write([]byte("One or more fields missing(address1 mailaddress)"))
-	} else if p.MailAddress.City == "" {
-		w.Write([]byte("One or more fields missing(city mailaddress)"))
-	} else if p.MailAddress.State == "" {
-		w.Write([]byte("One or more fields missing(state mailaddress)"))
-	} else if p.MailAddress.Zip == 0 {
-		w.Write([]byte("One or more fields missing(zip mailaddress)"))
-	} else if p.BillAddress.Address1 == "" {
-		w.Write([]byte("One or more fields missing(address1 billaddress)"))
-	} else if p.BillAddress.City == "" {
-		w.Write([]byte("One or more fields missing(city billaddress)"))
-	} else if p.BillAddress.State == "" {
-		w.Write([]byte("One or more fields missing(state billaddress)"))
-	} else if p.BillAddress.Zip == 0 {
-		w.Write([]byte("One or more fields missing(zip billaddress)"))
-	} else {
-		w.Write([]byte(fmt.Sprintf("%+v", p)))
+	err = validate.Struct(p)
+	if err != nil {
+
+		// this check is only needed when your code could produce
+		// an invalid value for validation such as interface with nil
+		// value most including myself do not usually have code like this.
+		if _, ok := err.(*validator.InvalidValidationError); ok {
+			fmt.Println(err)
+			return
+		}
+
+		var errors APIErrors
+
+		for _, err := range err.(validator.ValidationErrors) {
+
+			newError := APIError{
+				Field: err.Field(),
+				Tag:   err.Tag(),
+				Value: err.Value(),
+			}
+
+			errors.Errors = append(errors.Errors, newError)
+		}
+
+		body, _ := json.Marshal(errors)
+		w.Write(body)
+
+		return
 	}
+	w.Write([]byte("validation ok"))
 }
 
 func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
