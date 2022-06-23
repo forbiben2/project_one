@@ -5,15 +5,16 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 )
 
 type Person struct {
-	Firstname   string  `json:"firstname" validate:"required,lt=12,alpha"`
-	Lastname    string  `json:"lastname" validate:"required,lt=12,alpha"`
-	Phone       int     `json:"phone" validate:"required,lt=9999999999"`
+	Firstname   string  `json:"firstname" validate:"required,lte=12,alpha,Capitalization"`
+	Lastname    string  `json:"lastname" validate:"required,lte=12,alpha,Capitalization"`
+	Phone       int     `json:"phone" validate:"required,lte=9999999999,gte=1111111111"`
 	Email       string  `json:"email" validate:"required,email,lt=35"`
 	ssn         string  `json:"ssn" validate:"required,ssn"` //show as empty lowercase field(private field not shared), or - in json tag
 	MailAddress Address `json:"mailingAddress" validate:"required"`
@@ -23,9 +24,9 @@ type Person struct {
 type Address struct {
 	Address1 string `json:"address1" validate:"required,lt=30"`
 	Address2 string `json:"address2,omitempty" validate:"lt=30"` //will omit if empty
-	City     string `json:"city" validate:"required,lt=15,alpha"`
-	State    string `json:"state" validate:"required,len=2,alpha"`
-	Zip      string `json:"zip" validate:"required,numeric,lt=99999"`
+	City     string `json:"city" validate:"required,lt=15,alpha,Capitalization"`
+	State    string `json:"state" validate:"required,len=2,alpha,uppercase"`
+	Zip      string `json:"zip" validate:"required,numeric,len=5"`
 }
 
 type APIErrors struct {
@@ -37,16 +38,20 @@ type APIError struct {
 	Value interface{}
 }
 
+var ps []Person
+
 var validate *validator.Validate
 
 func main() {
 
 	validate = validator.New()
+	validate.RegisterValidation("Capitalization", capitalization)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/healthcheck", HealthCheckHandler)
 	r.HandleFunc("/test", testHandler)
 	r.HandleFunc("/jsonperson", returnPerson)
+	r.HandleFunc("/jsonpersons", returnPersons)
 	r.HandleFunc("/jsonperson/create", createPerson)
 	// http.Handle("/", r)
 	srv := &http.Server{
@@ -54,6 +59,13 @@ func main() {
 		Addr:    "0.0.0.0:8000",
 	}
 	log.Fatal(srv.ListenAndServe())
+}
+
+func capitalization(fl validator.FieldLevel) bool {
+	if fl.Field().String() == strings.Title(fl.Field().String()) {
+		return true
+	}
+	return false
 }
 
 func returnPerson(w http.ResponseWriter, r *http.Request) {
@@ -87,8 +99,21 @@ func returnPerson(w http.ResponseWriter, r *http.Request) {
 	w.Write(body)
 }
 
+func returnPersons(w http.ResponseWriter, r *http.Request) {
+
+	body, err := json.Marshal(ps)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("Error-%v", err.Error())))
+		return
+	}
+
+	w.Write(body)
+}
+
 func createPerson(w http.ResponseWriter, r *http.Request) {
 	var p Person
+
 	// var d []byte
 
 	err := json.NewDecoder(r.Body).Decode(&p)
@@ -128,6 +153,9 @@ func createPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write([]byte("validation ok"))
+
+	ps = append(ps, p)
+
 }
 
 func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
