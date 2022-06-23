@@ -113,6 +113,7 @@ func returnPersons(w http.ResponseWriter, r *http.Request) {
 
 func createPerson(w http.ResponseWriter, r *http.Request) {
 	var p Person
+	c := ps
 
 	// var d []byte
 
@@ -154,7 +155,36 @@ func createPerson(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write([]byte("validation ok"))
 
-	ps = append(ps, p)
+	c = append(c, p)
+
+	err = validate.Var(c, "unique=Email")
+	if err != nil {
+		if _, ok := err.(*validator.InvalidValidationError); ok {
+			fmt.Println(err)
+			return
+		}
+
+		var errors APIErrors
+
+		for _, err := range err.(validator.ValidationErrors) {
+
+			newError := APIError{
+				Field: err.Field(),
+				Tag:   err.Tag(),
+				Value: err.Value(),
+			}
+
+			errors.Errors = append(errors.Errors, newError)
+		}
+
+		body, _ := json.Marshal(errors)
+		w.Write(body)
+
+		return
+	} else {
+		ps = c
+		w.Write([]byte("Appended"))
+	}
 
 }
 
