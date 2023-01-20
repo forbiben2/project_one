@@ -9,7 +9,7 @@ Terminal Commands
     .-current location
     touch-make a file
     mkdir-make a directory
-    chmod-change mod
+    chmod-change permissions
     chown-change owner
     sudo-super user do
     chgrp-change group
@@ -20,7 +20,8 @@ Terminal Commands
     mv-move
     ctrl r-search
     ctrl c-clear
-    echo $PATH-tells you your path
+    echo
+echo $PATH-tells you your path
     exec-execute
 Git Commands
     git add-adds file to list for being committed

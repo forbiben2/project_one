@@ -19,23 +19,28 @@ type Address struct {
 	Zip      int
 }
 
-func (p *Person) Label() {
-
+func (p *Person) MailingLabel() {
+	fmt.Printf("%v %v\n", p.Firstname, p.Lastname)
+	fmt.Printf("%v\n", p.MailAddress.Address1)
+	if p.MailAddress.Address2 != "" {
+		fmt.Printf("%v\n", p.MailAddress.Address2)
+	}
+	fmt.Printf("%v, %v, %v\n\n", p.MailAddress.City, p.MailAddress.State, p.MailAddress.Zip)
 }
 
-func alterPointer(AlterThisString *string, AlterThisPointer *string) {
-	*AlterThisString = *AlterThisString + "abc"
+func alterPointer(AlterThisString string, AlterThisPointer *string) {
+	AlterThisString = AlterThisString + "abc"
 	*AlterThisPointer = *AlterThisPointer + "abc"
 }
 
-func PassByPointer(name string, namebypointer *string) {
-	fmt.Printf("Name=%v\n", name)
-	fmt.Printf("Namebypointer=%v\n", namebypointer)
-	alterPointer(&name, namebypointer)
-	fmt.Printf("Name=%v\n", name)
-	fmt.Printf("Namebypointer=%v\n", namebypointer)
+// func PassByPointer(name string, namebypointer *string) {
+// 	fmt.Printf("Name=%v\n", name)
+// 	fmt.Printf("Namebypointer=%v\n", *namebypointer)
+// 	alterPointer(name, namebypointer)
+// 	fmt.Printf("Name=%v\n", name)
+// 	fmt.Printf("Namebypointer=%v\n", *namebypointer)
 
-}
+// }
 
 // var x int
 // var y bool
@@ -45,7 +50,7 @@ func PassByPointer(name string, namebypointer *string) {
 // var s Person
 // var i interface{}
 
-var intSlice []int
+var intSlice []int	
 
 var boolSlice []bool
 
@@ -76,7 +81,38 @@ func main() {
 		},
 	}
 
-	PassByPointer(Evan.Firstname, &Evan.Firstname)
+	Tom := Person{
+		Firstname: "Tom",
+		Lastname:  "Jones",
+		Phone:     6784444444,
+		Email:     "tjones@gmail.com",
+		MailAddress: Address{
+			Address1: "1040 Somestreet",
+			City:     "Las Vegas",
+			State:    "CA",
+			Zip:      70000,
+		},
+		BillAddress: Address{
+			Address1: "1040 Somestreet",
+			City:     "Las Vegas",
+			State:    "CA",
+			Zip:      70000,
+		},
+	}
+
+	Evan.MailingLabel()
+
+	Tom.MailingLabel()
+
+	Tom.MailAddress.Address2 = "Unit 1200"
+
+	Evan.MailAddress.Address2 = "Unit 804"
+
+	Evan.MailingLabel()
+
+	Tom.MailingLabel()
+
+	// PassByPointer(Evan.Firstname, &Evan.Firstname)
 
 	// fmt.Printf("%+v\n", Evan)
 

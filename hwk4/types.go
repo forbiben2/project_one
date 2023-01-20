@@ -1,6 +1,9 @@
 package main
 
+import "gorm.io/gorm"
+
 type Person struct {
+	gorm.Model
 	Firstname   string  `json:"firstname" validate:"required,lte=12,alpha,Capitalization"`
 	Lastname    string  `json:"lastname" validate:"required,lte=12,alpha,Capitalization"`
 	Phone       int     `json:"phone" validate:"required,lte=9999999999,gte=1111111111"`
@@ -11,6 +14,7 @@ type Person struct {
 }
 
 type Address struct {
+	gorm.Model
 	Address1 string `json:"address1" validate:"required,lt=30"`
 	Address2 string `json:"address2,omitempty" validate:"lt=30"` //will omit if empty
 	City     string `json:"city" validate:"required,lt=15,alpha,Capitalization"`
