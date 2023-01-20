@@ -1,0 +1,198 @@
+// package main
+
+// import (
+// 	"encoding/json"
+// 	"fmt"
+// 	"log"
+// 	"net/http"
+// 	"strings"
+
+// 	"github.com/go-playground/validator/v10"
+// 	"github.com/gorilla/mux"
+// 	"gorm.io/gorm"
+// )
+
+// var ps []Person
+
+// var validate *validator.Validate
+
+// var db *gorm.DB
+
+// func main() {
+// 	initialMigration()
+// 	handleRequests()
+// }
+
+// func handleRequests() {
+
+// 	validate = validator.New()
+// 	validate.RegisterValidation("Capitalization", capitalization)
+
+// 	r := mux.NewRouter()
+// 	r.HandleFunc("/healthcheck", HealthCheckHandler)
+// 	r.HandleFunc("/test", testHandler)
+// 	r.HandleFunc("/jsonperson", returnPerson)
+// 	r.HandleFunc("/jsonpersons", returnPersons)
+// 	r.HandleFunc("/jsonperson/create", createPerson)
+// 	r.HandleFunc("/jsonperson/remove", removePerson)
+// 	// http.Handle("/", r)
+// 	srv := &http.Server{
+// 		Handler: r,
+// 		Addr:    "0.0.0.0:8000",
+// 	}
+// 	log.Fatal(srv.ListenAndServe())
+// }
+
+// func initialMigration() {
+// 	db, err := gorm.Open("mysql", "hwk4.db")
+// 	if err != nil {
+// 		fmt.Println(err.Error())
+// 		panic("Failed to connect to database")
+// 	}
+
+// 	db.AutoMigrate(&Person{})
+// }
+
+// func capitalization(fl validator.FieldLevel) bool {
+// 	if fl.Field().String() == strings.Title(fl.Field().String()) {
+// 		return true
+// 	}
+// 	return false
+// }
+
+// func returnPerson(w http.ResponseWriter, r *http.Request) {
+// 	db, err = gorm.Open("mysql", "hwk4.db")
+// 	if err != nil {
+// 		panic("Could not reach database")
+// 	}
+// 	defer db.Close()
+
+// 	vars := mux.Vars(r)
+// 	email := vars[email]
+
+// 	var person Person
+// 	db.Where("email = ?", email).Find(&person)
+// 	json.NewDecoder(w).Decode(&person)
+// }
+
+// func returnPersons(w http.ResponseWriter, r *http.Request) {
+// 	db, err = gorm.Open("mysql", "hwk4.db")
+// 	if err != nil {
+// 		panic("Could not reach database")
+// 	}
+// 	defer db.Close()
+
+// 	var person []Person
+
+// 	db.Find(&person)
+// 	json.NewEncoder(w).Encode(person)
+
+// }
+
+// func createPerson(w http.ResponseWriter, r *http.Request) {
+// 	db, err = gorm.Open("mysql", "hwk4.db")
+// 	if err != nil {
+// 		panic("Could not reach database")
+// 	}
+// 	defer db.Close()
+
+// 	vars := mux.Vars()
+// 	firstname := vars["firstname"]
+// 	lastname := vars["lastname"]
+// 	phone := vars["phone"]
+// 	email := vars["email"]
+// 	ssn := vars["ssn"]
+// 	address1 := vars["address1"]
+// 	address2 := vars["address2"]
+// 	city := vars["city"]
+// 	state := vars["state"]
+// 	zip := vars["zip"]
+
+// 	db.Create(&Person{Firstname: firstname, Lastname: lastname, Phone: phone, Email: email, SSN: ssn, MailAddress: {address1, address2, city, state, zip}, BillAddress: {address1, address2, city, state, zip}})
+
+// 	fmt.Fprint(w, "Person Created")
+
+// }
+
+// func removePerson(w http.ResponseWriter, r *http.Request) {
+// 	db, err = gorm.Open("mysql", "hwk4.db")
+// 	if err != nil {
+// 		panic("Could not reach database")
+// 	}
+// 	defer db.Close()
+
+// 	vars := mux.Vars(r)
+// 	email := vars[email]
+
+// 	var person Person
+// 	db.Where("email = ?", email).Find(&person)
+// 	db.delete(&person)
+
+// }
+
+// func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+
+// 	w.Write([]byte("ok"))
+
+// }
+
+// func testHandler(w http.ResponseWriter, r *http.Request) {
+// 	day := 0
+// 	for {
+// 		if day == 0 {
+// 			w.Write([]byte("The 12 Days of Christmas\n\n"))
+// 			day = day + 1
+// 		}
+// 		if day == 1 {
+// 			w.Write([]byte("On the 1st day of christmas\nMy true love gave to me"))
+// 		} else if day == 2 {
+// 			w.Write([]byte("On the 2nd day of christmas\nMy true love gave to me"))
+// 		} else if day == 3 {
+// 			w.Write([]byte("On the 3rd day of christmas\nMy true love gave to me"))
+// 		} else {
+// 			w.Write([]byte("On the 4th day of christmas\nMy true love gave to me"))
+// 		}
+
+// 		switch day {
+// 		case 12:
+// 			w.Write([]byte("Twelve drummers drumming,"))
+// 			fallthrough
+// 		case 11:
+// 			w.Write([]byte("Eleven pipers pipping,"))
+// 			fallthrough
+// 		case 10:
+// 			w.Write([]byte("Ten lords a leaping,"))
+// 			fallthrough
+// 		case 9:
+// 			w.Write([]byte("Nine ladies dancing,"))
+// 			fallthrough
+// 		case 8:
+// 			w.Write([]byte("Eight maids a milking,"))
+// 			fallthrough
+// 		case 7:
+// 			w.Write([]byte("Seven swans a swimming,"))
+// 			fallthrough
+// 		case 6:
+// 			w.Write([]byte("Six geese-a-laying,"))
+// 			fallthrough
+// 		case 5:
+// 			w.Write([]byte("Five golden rings,"))
+// 			fallthrough
+// 		case 4:
+// 			w.Write([]byte("Four calling bird,"))
+// 			fallthrough
+// 		case 3:
+// 			w.Write([]byte("Three french hens,"))
+// 			fallthrough
+// 		case 2:
+// 			w.Write([]byte("Two turtle doves and,"))
+// 			fallthrough
+// 		case 1:
+// 			w.Write([]byte("A partridge in a pear tree \n \n "))
+// 		}
+// 		day++
+// 		if day > 12 {
+// 			break
+// 		}
+// 	}
+// }

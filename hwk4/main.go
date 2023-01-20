@@ -9,40 +9,22 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
-
-type Person struct {
-	Firstname   string  `json:"firstname" validate:"required,lte=12,alpha,Capitalization"`
-	Lastname    string  `json:"lastname" validate:"required,lte=12,alpha,Capitalization"`
-	Phone       int     `json:"phone" validate:"required,lte=9999999999,gte=1111111111"`
-	Email       string  `json:"email" validate:"required,email,lt=35"`
-	ssn         string  `json:"ssn" validate:"required,ssn"` //show as empty lowercase field(private field not shared), or - in json tag
-	MailAddress Address `json:"mailingAddress" validate:"required"`
-	BillAddress Address `json:"billingAddress" validate:"required"`
-}
-
-type Address struct {
-	Address1 string `json:"address1" validate:"required,lt=30"`
-	Address2 string `json:"address2,omitempty" validate:"lt=30"` //will omit if empty
-	City     string `json:"city" validate:"required,lt=15,alpha,Capitalization"`
-	State    string `json:"state" validate:"required,len=2,alpha,uppercase"`
-	Zip      string `json:"zip" validate:"required,numeric,len=5"`
-}
-
-type APIErrors struct {
-	Errors []APIError
-}
-type APIError struct {
-	Field string
-	Tag   string
-	Value interface{}
-}
 
 var ps []Person
 
 var validate *validator.Validate
 
+var db *gorm.DB
+
 func main() {
+	initialMigration()
+	handleRequests()
+}
+
+func handleRequests() {
 
 	validate = validator.New()
 	validate.RegisterValidation("Capitalization", capitalization)
@@ -53,12 +35,22 @@ func main() {
 	r.HandleFunc("/jsonperson", returnPerson)
 	r.HandleFunc("/jsonpersons", returnPersons)
 	r.HandleFunc("/jsonperson/create", createPerson)
-	// http.Handle("/", r)
+	http.Handle("/", r)
 	srv := &http.Server{
 		Handler: r,
-		Addr:    "0.0.0.0:8000",
+		Addr:    "0.0.0.0:3000",
 	}
 	log.Fatal(srv.ListenAndServe())
+}
+
+func initialMigration() {
+	db, err := gorm.Open(mysql.Open("hwk4.db"), &gorm.Config{})
+	if err != nil {
+		fmt.Println(err.Error())
+		panic("Failed to connect to database")
+	}
+
+	db.AutoMigrate(&Person{})
 }
 
 func capitalization(fl validator.FieldLevel) bool {
@@ -101,19 +93,24 @@ func returnPerson(w http.ResponseWriter, r *http.Request) {
 
 func returnPersons(w http.ResponseWriter, r *http.Request) {
 
-	body, err := json.Marshal(ps)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf("Error-%v", err.Error())))
-		return
-	}
+	// body, err := json.Marshal(ps)
+	// if err != nil {
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	w.Write([]byte(fmt.Sprintf("Error-%v", err.Error())))
+	// 	return
+	// }
 
-	w.Write(body)
+	var person []Person
+
+	db.Find(&person)
+	json.NewEncoder(w).Encode(person)
+
+	// w.Write(body)
 }
 
 func createPerson(w http.ResponseWriter, r *http.Request) {
 	var p Person
-	c := ps
+	ps2 := ps
 
 	// var d []byte
 
@@ -153,11 +150,10 @@ func createPerson(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-	w.Write([]byte("validation ok"))
 
-	c = append(c, p)
+	ps2 = append(ps2, p)
 
-	err = validate.Var(c, "unique=Email")
+	err = validate.Var(ps2, "unique=Email")
 	if err != nil {
 		if _, ok := err.(*validator.InvalidValidationError); ok {
 			fmt.Println(err)
@@ -182,9 +178,12 @@ func createPerson(w http.ResponseWriter, r *http.Request) {
 
 		return
 	} else {
-		ps = c
+		ps = ps2
+		db.Create(&ps)
 		w.Write([]byte("Appended"))
 	}
+
+	fmt.Println("Size: ", len(ps))
 
 }
 
